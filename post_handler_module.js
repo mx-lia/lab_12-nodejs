@@ -1,6 +1,7 @@
 const fs = require('fs');
 const url = require('url');
 const qs = require('querystring');
+const err_handler = require('./error_handler');
 
 const file_path = './static_files/StudentList.json';
 
@@ -26,15 +27,15 @@ module.exports = (request, response) => {
                         fs.writeFile(file_path, JSON.stringify(json), (e) => {
                             if (e) {
                                 console.log('Error');
-                                response.end('Error');
+                                err_handler(request, response, e.code, e.message);
                             } else {
                                 console.log('Student is added');
+                                response.writeHead(200, {'Content-Type': 'application/json; charset=utf-8'});
                                 response.end(JSON.stringify(JSON.parse(body)));
                             }
                         });
                     } else {
-                        response.setHeader('Content-Type', 'text/plain');
-                        response.end(`Student with id = ${JSON.parse(body).id} exists`);
+                        err_handler(request, response, 2, `Student with id = ${JSON.parse(body).id} exists`);
                     }
                 });
             });
@@ -45,7 +46,7 @@ module.exports = (request, response) => {
             fs.copyFile(file_path, `./backup/${date.getFullYear()}${date.getMonth()}${date.getDay()}${date.getHours()}${date.getMinutes()}_StudentList.json`, (err) => {
                 if (err) {
                     console.log('Error');
-                    response.end('Error');
+                    err_handler(request, response, err.code, err.message);
                 } else {
                     console.log('File is copied');
                     response.end('Ok');

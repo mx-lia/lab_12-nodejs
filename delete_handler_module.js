@@ -1,5 +1,6 @@
 const fs = require('fs');
 const url = require('url');
+const err_handler = require('./error_handler');
 
 const file_path = './static_files/StudentList.json';
 
@@ -15,7 +16,7 @@ module.exports = (request, response) => {
                         fs.unlink(`./backup/${files[i]}`, (e) => {
                             if (e) {
                                 console.log('Error');
-                                response.end('Error');
+                                err_handler(request, response, e.code, e.message);
                             } else {
                                 console.log('Ok');
                                 response.end('Ok');
@@ -24,8 +25,7 @@ module.exports = (request, response) => {
                     }
                 }
                 if (!flag) {
-                    response.setHeader('Content-Type', 'text/plain');
-                    response.end('No files');
+                    err_handler(request, response, 3, 'No files');
                 }
             });
             break;
@@ -33,23 +33,30 @@ module.exports = (request, response) => {
         case /\/\d+/.test(path): {
             fs.readFile(file_path, (err, data) => {
                 let json = JSON.parse(data.toString());
+                let id = Number(path.match(/\d+/)[0]);
                 for (let i = 0; i < json.length; i++) {
-                    if (json[i].id === Number(path.match(/\d+/)[0])) {
+                    if (json[i].id === id) {
                         response.setHeader('Content-Type', 'application/json');
                         response.write(JSON.stringify(json[i]));
                         delete json[i];
+                        json = json.filter(function(x) {
+                            return x !== null;
+                        });
                     }
                 }
-                fs.writeFile(file_path, JSON.stringify(json), (e) => {
-                    if (e) {
-                        console.log('Error');
-                        response.end('Error');
-                    } else {
-                        console.log('Ok');
-                        response.end('Ok');
-                    }
-                });
-                response.end();
+                if(!response.hasHeader('Content-Type')) {
+                    err_handler(request, response, 1, `Student with id = ${id} doesn't exist`);
+                } else {
+                    fs.writeFile(file_path, JSON.stringify(json), (e) => {
+                        if (e) {
+                            console.log('Error');
+                            err_handler(request, response, e.code, e.message);
+                        } else {
+                            console.log('Ok');
+                            response.end();
+                        }
+                    });
+                }
             });
         }
     }

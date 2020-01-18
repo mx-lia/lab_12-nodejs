@@ -1,5 +1,6 @@
 const fs = require('fs');
 const url = require('url');
+const err_handler = require('./error_handler');
 
 const file_path = './static_files/StudentList.json';
 
@@ -21,9 +22,10 @@ module.exports = (request, response) => {
                             fs.writeFile(file_path, JSON.stringify(json), (e) => {
                                 if (e) {
                                     console.log('Error');
-                                    response.end('Error');
+                                    err_handler(request, response, e.code, e.message);
                                 } else {
                                     console.log('Student is altered');
+                                    response.writeHead(200, {'Content-Type': 'application/json; charset=utf-8'});
                                     response.end(JSON.stringify(JSON.parse(body)));
                                 }
                             });
@@ -31,8 +33,7 @@ module.exports = (request, response) => {
                         }
                     }
                     if(!flag) {
-                        response.setHeader('Content-Type', 'text/plain');
-                        response.end(`Student with id = ${JSON.parse(body).id} does not exist`);
+                        err_handler(request, response, 1, `Student with id = ${JSON.parse(body).id} doesn't exist`);
                     }
                 });
             });
