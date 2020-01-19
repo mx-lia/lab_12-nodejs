@@ -49,7 +49,7 @@ module.exports = (request, response) => {
                     err_handler(request, response, err.code, err.message);
                 } else {
                     console.log('File is copied');
-                    response.end('Ok');
+                    response.end('File is copied');
                 }
             });
             break;

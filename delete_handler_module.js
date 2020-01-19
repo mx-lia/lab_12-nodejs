@@ -42,6 +42,7 @@ module.exports = (request, response) => {
                         json = json.filter(function(x) {
                             return x !== null;
                         });
+                        console.log('Student is deleted');
                     }
                 }
                 if(!response.hasHeader('Content-Type')) {
@@ -52,7 +53,6 @@ module.exports = (request, response) => {
                             console.log('Error');
                             err_handler(request, response, e.code, e.message);
                         } else {
-                            console.log('Ok');
                             response.end();
                         }
                     });
